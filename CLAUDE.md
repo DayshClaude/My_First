@@ -28,6 +28,12 @@
 - Side projects and hobby code
 
 ## Notes
-- This is a home machine — no VPN, no work credentials
+- This is a home machine — no VPN, no work credentials by default
 - Feel free to suggest simpler/faster approaches suited for a single developer
 - No deployment pipelines or CI/CD unless specifically set up
+
+## Work Projects at Home
+- Occasionally work projects may be worked on here
+- Keep work projects in separate folders/repos to avoid mixing environments
+- If working on a work project, it will be flagged clearly — otherwise assume personal/home context
+- Do not apply work-specific conventions, credentials, or tooling unless explicitly told we are in a work project
