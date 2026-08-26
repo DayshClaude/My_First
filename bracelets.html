@@ -18,8 +18,13 @@
 
 <header class="site-head">
   <a class="wordmark" href="index.html">
-    <span class="wordmark__main">Beadwell</span>
-    <span class="wordmark__sub">Bracelets &amp; Crafts</span>
+    <!-- The logo replaces the text below as soon as images/logo.svg or
+         images/logo.png exists. Until then the text shows. -->
+    <img class="wordmark__logo" alt="Beadwell Bracelets &amp; Crafts" hidden>
+    <span class="wordmark__text">
+      <span class="wordmark__main">Beadwell</span>
+      <span class="wordmark__sub">Bracelets &amp; Crafts</span>
+    </span>
   </a>
   <nav class="site-nav" aria-label="Main">
     <a href="bracelets.html" aria-current="page">Bracelets</a>
@@ -39,7 +44,7 @@
       <h1>Bracelets and wraps</h1>
       <p class="lede">Beaded, wire-linked and leather-wrapped, from single-charm everyday pieces to full-spectrum statement bracelets. Most can be remade in different colours or to a different wrist size.</p>
       <p class="note">Nothing is sold through the site. Use <strong>Enquire</strong> on any
-        piece and I'll come back to you with sizing, colours and price.</p>
+        piece and we'll come back to you with sizing, colours and price.</p>
     </div>
   </section>
 
@@ -456,8 +461,8 @@
     <div class="section__body enquire">
       <div class="enquire__intro">
         <h2>Send a note</h2>
-        <p>This goes straight to my inbox. There's no payment on the site — no card
-          details, no checkout — just a message, and I'll reply to you directly.</p>
+        <p>This goes straight to our inbox. There's no payment on the site — no card
+          details, no checkout — just a message, and we'll reply to you directly.</p>
         <p class="fineprint">Prefer email? Write to
           <!-- EDIT: swap this for your real address. -->
           <a href="mailto:hello@beadwellbracelets.co.uk">hello@beadwellbracelets.co.uk</a>.</p>
@@ -494,7 +499,7 @@
 
         <div class="form__foot">
           <button type="submit" class="btn btn--solid">Send the note</button>
-          <span class="fineprint">I'll reply within a day or two.</span>
+          <span class="fineprint">We'll reply within a day or two.</span>
         </div>
         <p class="form__status" id="form-status" role="status" hidden></p>
       </form>
@@ -505,7 +510,8 @@
 
 <footer class="site-foot">
   <div class="site-foot__brand">
-    <span class="wordmark__main">Beadwell</span>
+    <img class="foot-logo" alt="Beadwell Bracelets &amp; Crafts" hidden>
+    <span class="wordmark__main foot-mark">Beadwell</span>
     <p>Crochet and hand-strung beaded jewellery, made one at a time.</p>
   </div>
   <nav class="site-foot__links" aria-label="Footer">

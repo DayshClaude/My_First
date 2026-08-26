@@ -262,7 +262,49 @@ if (document.documentElement.hasAttribute('data-preview')) {
   });
 }
 
-/* ── 3. Reveals + the year in the footer ───────────────── */
+/* ── 3. Logo ───────────────────────────────────────────────
+   The text wordmark shows by default, so there's never a broken
+   image. If a logo file loads, it takes the text's place.
+   images/logo-dark.* is used on dark backgrounds when present.
+   ------------------------------------------------------- */
+
+function loadFirst(sources, onFound) {
+  var i = 0;
+  (function attempt() {
+    if (i >= sources.length) return;
+    var probe = new Image();
+    probe.onload = function () { onFound(sources[i]); };
+    probe.onerror = function () { i++; attempt(); };
+    probe.src = sources[i];
+  })();
+}
+
+function prefersDark() {
+  var stamped = document.documentElement.getAttribute('data-theme');
+  if (stamped) return stamped === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function applyLogo() {
+  var dark = prefersDark() ? ['images/logo-dark.svg', 'images/logo-dark.png'] : [];
+  var candidates = dark.concat(['images/logo.svg', 'images/logo.png']);
+
+  loadFirst(candidates, function (src) {
+    document.querySelectorAll('.wordmark__logo, .foot-logo').forEach(function (img) {
+      img.src = src;
+      img.hidden = false;
+    });
+    document.querySelectorAll('.wordmark__text, .foot-mark').forEach(function (el) {
+      el.hidden = true;
+    });
+    document.documentElement.classList.add('has-logo');
+  });
+}
+
+applyLogo();
+if (darkQuery.addEventListener) darkQuery.addEventListener('change', applyLogo);
+
+/* ── 4. Reveals + the year in the footer ───────────────── */
 
 var yearEl = document.getElementById('year');
 if (yearEl) yearEl.textContent = String(new Date().getFullYear());

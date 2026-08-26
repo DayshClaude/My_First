@@ -18,8 +18,13 @@
 
 <header class="site-head">
   <a class="wordmark" href="index.html">
-    <span class="wordmark__main">Beadwell</span>
-    <span class="wordmark__sub">Bracelets &amp; Crafts</span>
+    <!-- The logo replaces the text below as soon as images/logo.svg or
+         images/logo.png exists. Until then the text shows. -->
+    <img class="wordmark__logo" alt="Beadwell Bracelets &amp; Crafts" hidden>
+    <span class="wordmark__text">
+      <span class="wordmark__main">Beadwell</span>
+      <span class="wordmark__sub">Bracelets &amp; Crafts</span>
+    </span>
   </a>
   <nav class="site-nav" aria-label="Main">
     <a href="bracelets.html">Bracelets</a>
@@ -36,9 +41,9 @@
     <div class="hero__text">
       <p class="eyebrow reveal">Handmade · One of a kind</p>
       <h1 class="reveal">Every stitch counted, every bead strung by hand.</h1>
-      <p class="lede reveal">Beadwell is a one-person workshop making crochet pieces and
-        beaded jewellery in small numbers. Nothing here is mass-made, and nothing comes
-        out quite the same way twice.</p>
+      <p class="lede reveal">Beadwell is a small team making crochet pieces and beaded jewellery in
+        small numbers. Nothing here is mass-made, and nothing comes out quite the same
+        way twice.</p>
       <div class="hero__actions reveal">
         <a class="btn btn--solid" href="bracelets.html">See the bracelets</a>
         <a class="btn btn--ghost" href="#enquire">Ask about a piece</a>
@@ -53,10 +58,10 @@
     <div class="spine" aria-hidden="true"><span>The Collection</span></div>
     <div class="section__body">
       <header class="section__head">
-        <h2>Three things I make</h2>
+        <h2>Three things we make</h2>
         <p class="note">There's no checkout here — this is a place to look rather than buy.
-          If something catches your eye, use <strong>Enquire</strong> and I'll come back to
-          you with sizing, colours and price.</p>
+          If something catches your eye, use <strong>Enquire</strong> and we'll come back
+          to you with sizing, colours and price.</p>
       </header>
       <div class="cats">
         <a class="cat" href="bracelets.html">
@@ -101,17 +106,17 @@
     <div class="section__body about">
       <div class="about__text">
         <h2>Made slowly, on purpose</h2>
-        <p>I've been crocheting since I was small and beading for nearly as long. What
-          started as something to do with my hands in the evening turned into more pieces
-          than the house can reasonably hold, which is how this page came about.</p>
-        <p>Everything is made by me, at home, from materials I've picked myself — natural
-          fibres where I can, glass and real stone rather than plastic, and proper findings
-          so a clasp doesn't give out after a fortnight. A bracelet takes an evening. A
-          blanket takes considerably longer.</p>
-        <p>Colours are the part I enjoy most. If you like a piece but not its palette,
+        <p>Between us we've been crocheting and beading for most of our lives. What
+          started as something to do with our hands in the evening turned into more
+          pieces than the house can reasonably hold, which is how this page came about.</p>
+        <p>Everything is made by hand, at home, from materials we pick ourselves —
+          natural fibres where we can, glass and real stone rather than plastic, and
+          proper findings so a clasp doesn't give out after a fortnight. A bracelet takes
+          an evening. A blanket takes considerably longer.</p>
+        <p>Colours are the part we enjoy most. If you like a piece but not its palette,
           that's an easy thing to change — most of what you see here can be remade in
           whatever suits you.</p>
-        <p>I'm not a shop and I don't want to be one. If something here appeals, send a
+        <p>We're not a shop and don't want to be one. If something here appeals, send a
           note and we'll work it out between us.</p>
       </div>
       <figure class="about__swatch" aria-hidden="true">
@@ -134,20 +139,20 @@
         <li>
           <span class="steps__num">01</span>
           <h3>Send a note</h3>
-          <p>Tell me what you're after — a piece from the collection in different colours,
+          <p>Tell us what you're after — a piece from the collection in different colours,
             or something entirely your own. Photos of what you like are genuinely useful.</p>
         </li>
         <li>
           <span class="steps__num">02</span>
           <h3>We settle the details</h3>
-          <p>I'll come back with materials, colours, sizing, a price and a rough timescale.
+          <p>We'll come back with materials, colours, sizing, a price and a rough timescale.
             Nothing starts until you're happy with all of it.</p>
         </li>
         <li>
           <span class="steps__num">03</span>
           <h3>It gets made</h3>
-          <p>I'll send a photo or two along the way. Small pieces take a week or so; larger
-            crochet work takes longer and I'll always say so up front.</p>
+          <p>We'll send a photo or two along the way. Small pieces take a week or so; larger
+            crochet work takes longer and we'll always say so up front.</p>
         </li>
       </ol>
     </div>
@@ -158,8 +163,8 @@
     <div class="section__body enquire">
       <div class="enquire__intro">
         <h2>Send a note</h2>
-        <p>This goes straight to my inbox. There's no payment on the site — no card
-          details, no checkout — just a message, and I'll reply to you directly.</p>
+        <p>This goes straight to our inbox. There's no payment on the site — no card
+          details, no checkout — just a message, and we'll reply to you directly.</p>
         <p class="fineprint">Prefer email? Write to
           <!-- EDIT: swap this for your real address. -->
           <a href="mailto:hello@beadwellbracelets.co.uk">hello@beadwellbracelets.co.uk</a>.</p>
@@ -196,7 +201,7 @@
 
         <div class="form__foot">
           <button type="submit" class="btn btn--solid">Send the note</button>
-          <span class="fineprint">I'll reply within a day or two.</span>
+          <span class="fineprint">We'll reply within a day or two.</span>
         </div>
         <p class="form__status" id="form-status" role="status" hidden></p>
       </form>
@@ -207,7 +212,8 @@
 
 <footer class="site-foot">
   <div class="site-foot__brand">
-    <span class="wordmark__main">Beadwell</span>
+    <img class="foot-logo" alt="Beadwell Bracelets &amp; Crafts" hidden>
+    <span class="wordmark__main foot-mark">Beadwell</span>
     <p>Crochet and hand-strung beaded jewellery, made one at a time.</p>
   </div>
   <nav class="site-foot__links" aria-label="Footer">

@@ -156,15 +156,41 @@ a:hover { color: var(--accent-dim); }
 
 .site-head {
   position: sticky; top: 0; z-index: 50;
+  gap: clamp(1rem, 4vw, 3rem);
   display: flex; align-items: center; justify-content: space-between;
   gap: 1rem;
-  padding: 1rem var(--gutter);
+  padding: .85rem var(--gutter);
   background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line-soft);
 }
 
-.wordmark { text-decoration: none; color: var(--ink); display: grid; line-height: 1; }
+.wordmark {
+  text-decoration: none; color: var(--ink);
+  display: flex; align-items: center;
+  line-height: 1;
+  min-width: 0;
+}
+.wordmark__text { display: grid; }
+
+/* The logo box is height-led: whatever the artwork's proportions, it is
+   scaled to fit and never stretched. A wide logo simply gets more width. */
+.wordmark__logo {
+  display: block;
+  height: clamp(2.1rem, 4.4vw, 2.9rem);
+  width: auto;
+  max-width: min(58vw, 20rem);
+  object-fit: contain;
+  object-position: left center;
+}
+.wordmark__logo[hidden], .wordmark__text[hidden], .foot-logo[hidden], .foot-mark[hidden] { display: none; }
+
+.foot-logo {
+  display: block;
+  height: 2.6rem; width: auto; max-width: 16rem;
+  object-fit: contain; object-position: left center;
+  margin-bottom: .25rem;
+}
 .wordmark__main {
   font-family: var(--font-display);
   font-variation-settings: "SOFT" 60, "WONK" 1, "opsz" 40;
@@ -527,3 +553,6 @@ a:hover { color: var(--accent-dim); }
   }
   .js .reveal, .js .piece.will-reveal { opacity: 1; transform: none; }
 }
+
+/* A little more headroom once real artwork is in the header. */
+:root.has-logo .site-head { padding-top: 1rem; padding-bottom: 1rem; }
