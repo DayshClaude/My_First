@@ -1,0 +1,25 @@
+# Netlify settings for a plain static site — there is no build step.
+[build]
+  publish = "."
+  command = ""
+
+# Sensible security headers. Note: fonts.googleapis.com and
+# fonts.gstatic.com are allowed because the site uses Google Fonts.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'"
+
+# Cache the assets hard, but always revalidate the pages.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
