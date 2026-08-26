@@ -1,9 +1,8 @@
 /* ============================================================
    Beadwell — site behaviour
    1. Generated stitch / bead textures (placeholders for photos)
-   2. Collection filtering
-   3. "Enquire about this piece" → prefills the form
-   4. Scroll reveals
+   2. "Enquire about this piece" → prefills the form
+   3. Scroll reveals
    ============================================================ */
 
 document.documentElement.classList.add('js');
@@ -184,6 +183,7 @@ function light(ctx, w, h) {
 }
 
 var canvases = Array.prototype.slice.call(document.querySelectorAll('canvas.texture'));
+var pieces = Array.prototype.slice.call(document.querySelectorAll('.piece'));
 
 function paintAll() { canvases.forEach(paint); }
 
@@ -201,40 +201,7 @@ if (darkQuery.addEventListener) darkQuery.addEventListener('change', paintAll);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintAll);
 paintAll();
 
-/* ── 2. Filtering ──────────────────────────────────────── */
-
-var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
-var pieces = Array.prototype.slice.call(document.querySelectorAll('.piece'));
-var emptyMsg = document.getElementById('empty');
-
-function applyFilter(cat) {
-  var shown = 0;
-  pieces.forEach(function (piece) {
-    var match = cat === 'all' || piece.dataset.cat === cat;
-    piece.hidden = !match;
-    if (match) shown++;
-  });
-
-  chips.forEach(function (chip) {
-    var active = chip.dataset.filter === cat;
-    chip.classList.toggle('is-active', active);
-    chip.setAttribute('aria-pressed', active ? 'true' : 'false');
-  });
-
-  if (emptyMsg) emptyMsg.hidden = shown > 0;
-  // Columns reflow, so the canvases need redrawing at their new sizes.
-  requestAnimationFrame(paintAll);
-}
-
-chips.forEach(function (chip) {
-  chip.addEventListener('click', function () { applyFilter(chip.dataset.filter); });
-});
-
-document.querySelectorAll('.empty .linkish').forEach(function (btn) {
-  btn.addEventListener('click', function () { applyFilter(btn.dataset.filter); });
-});
-
-/* ── 3. Enquire → prefill the form ─────────────────────── */
+/* ── 2. Enquire → prefill the form ─────────────────────── */
 
 var aboutPiece = document.getElementById('about-piece');
 var aboutName = document.getElementById('about-piece__name');
@@ -268,7 +235,8 @@ function clearPiece() {
 document.querySelectorAll('.enquire-btn').forEach(function (btn) {
   btn.addEventListener('click', function () {
     setPiece(btn.dataset.piece, btn.dataset.ref);
-    document.getElementById('enquire').scrollIntoView({
+    var section = document.getElementById('enquire');
+    if (section) section.scrollIntoView({
       behavior: reduceMotion ? 'auto' : 'smooth',
       block: 'start'
     });
@@ -294,7 +262,7 @@ if (document.documentElement.hasAttribute('data-preview')) {
   });
 }
 
-/* ── 4. Reveals + the year in the footer ───────────────── */
+/* ── 3. Reveals + the year in the footer ───────────────── */
 
 var yearEl = document.getElementById('year');
 if (yearEl) yearEl.textContent = String(new Date().getFullYear());

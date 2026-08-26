@@ -8,13 +8,21 @@ Plain HTML, CSS and JavaScript. No build step, no framework, no dependencies to
 install. What's in this folder is exactly what gets served.
 
 ```
-index.html          the whole site — all the text lives here
+index.html          landing page — hero, the three categories, About, commissions
+bracelets.html      25 bracelets and wraps
+crochet.html        19 crochet pieces
+jewellery.html      12 necklaces, earrings and rings
 thanks.html         where someone lands after sending a note
 assets/style.css    every colour, font and spacing rule
-assets/app.js       filtering, the enquire flow, the swatch textures
-images/             your photos go here (see images/README.md)
+assets/app.js       the enquire flow, the swatch textures
+images/             the photos the site serves (see images/README.md)
+images/source/      the original contact sheets, before splitting
+tools/              scripts for splitting photos and rebuilding the pages
 netlify.toml        Netlify settings — you shouldn't need to touch this
 ```
+
+Every page carries its own enquiry form, so *Enquire* on any piece scrolls to a
+form on the same page with that piece already filled in.
 
 ---
 
@@ -80,8 +88,9 @@ the form — Netlify needs it.
 
 ### Text
 
-All of it is in `index.html`. Open it in any text editor, find the words on the
-page, change them, save. Nothing else needs to happen.
+Open the page you want in any text editor, find the words, change them, save.
+Nothing else needs to happen. The About section is in `index.html`; each
+category's pieces are in its own file.
 
 ### Photos
 
@@ -89,17 +98,41 @@ See **`images/README.md`** — save a photo with the right filename and it appea
 by itself. Until then each card draws its own woven or beaded swatch, so the
 site never looks half-finished.
 
+### Splitting photos of several products at once
+
+Put the original photo in `images/source/` and run:
+
+```bash
+python3 tools/split_all.py
+```
+
+It finds every sheet, cuts one image per product, pads each to the card shape
+and writes them into `images/`. Filenames just need to contain "bracelet",
+"crochet" or "jewel" plus a number — spaces and capitals are fine. It warns
+when a crop is too small to look sharp, and skips a sheet uploaded twice.
+
+To split a single sheet, or if a background isn't clean enough to detect:
+
+```bash
+python3 tools/split_sheets.py "images/source/Bracelets 1.png" --prefix bracelet --dry-run
+python3 tools/split_sheets.py "images/source/Bracelets 1.png" --prefix bracelet --grid 2x3
+```
+
 ### Adding a new piece
 
-Copy one `<article class="piece">…</article>` block in `index.html` and edit it.
-Four things to change:
+Copy one `<article class="piece">…</article>` block on the relevant page and
+edit it. Three things to change:
 
-- `data-cat="bracelets"` — one of `crochet`, `bracelets` or `jewellery`
 - `--img:url('images/your-photo.jpg')` and the `<span class="filehint">` under it
 - `data-texture="bead"` or `"stitch"`, and give `data-seed` any unique word
   (that's what makes each swatch look different)
 - `data-piece` and `data-ref` on the Enquire button — these are what gets
   emailed to you
+
+For a lot of pieces at once, edit the catalogue at the top of
+`tools/build_pages.py` and run `python3 tools/build_pages.py` — it regenerates
+the three category pages. **That overwrites them**, so use it for bulk changes
+and edit the HTML directly for small ones.
 
 ### Colours
 

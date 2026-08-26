@@ -264,22 +264,51 @@ a:hover { color: var(--accent-dim); }
 .section__head { display: flex; flex-direction: column; gap: 1rem; }
 .section__head h2 { font-size: clamp(1.9rem, 3.6vw, 3rem); font-weight: 300; letter-spacing: -.01em; }
 
-/* ── Filters ───────────────────────────────────────────── */
+/* ── Category cards (landing page) ─────────────────────── */
 
-.filters { display: flex; flex-wrap: wrap; gap: .5rem; }
-.chip {
+.cats { display: grid; gap: var(--gap); }
+@media (min-width: 46rem) { .cats { grid-template-columns: repeat(3, 1fr); } }
+
+.cat {
+  display: flex; flex-direction: column;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color .25s ease, transform .25s ease;
+}
+.cat:hover { border-color: var(--accent); transform: translateY(-3px); color: var(--ink); }
+.cat .piece__media { border-bottom: 1px solid var(--line-soft); }
+.cat__body { display: flex; flex-direction: column; gap: .6rem; padding: 1.25rem 1.25rem 1.5rem; }
+.cat__body h3 {
+  font-size: 1.6rem;
+  font-variation-settings: "SOFT" 50, "WONK" 1, "opsz" 32;
+}
+.cat__body > p { font-size: .9375rem; color: var(--ink-soft); line-height: 1.6; }
+.cat__go {
+  margin-top: .35rem;
   font-family: var(--font-mono);
   font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase;
-  padding: .55rem 1rem;
-  background: transparent;
-  color: var(--ink-soft);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+  color: var(--accent);
 }
-.chip:hover { border-color: var(--accent); color: var(--accent); }
-.chip.is-active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.cat:hover .cat__go { color: var(--accent-dim); }
+
+/* ── Category page header ──────────────────────────────── */
+
+.page-head .section__body { gap: 1.1rem; }
+.page-head h1 {
+  font-size: clamp(2.3rem, 5vw, 3.9rem);
+  font-weight: 300;
+  font-variation-settings: "SOFT" 50, "WONK" 1, "opsz" 90;
+  letter-spacing: -.015em;
+  max-width: 18ch;
+}
+.page-head .note { padding-top: .5rem; }
+
+/* Mark the page you're on in the nav */
+.site-nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ── Gallery: true masonry via CSS columns ─────────────── */
 
