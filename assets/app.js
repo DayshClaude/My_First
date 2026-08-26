@@ -72,7 +72,7 @@ function drawStitch(ctx, w, h, rand, pal) {
     // Bands of colour, a few rows deep, like a striped blanket.
     var band = hues[Math.floor(rand() * hues.length)];
     var bandRows = 1 + Math.floor(rand() * 3);
-    var alpha = 0.16 + rand() * 0.24;
+    var alpha = 0.24 + rand() * 0.26;
 
     for (var b = 0; b < bandRows && r < rows; b++, r++) {
       var y = r * rowH;
@@ -108,7 +108,7 @@ function drawBead(ctx, w, h, rand, pal) {
     var y = r * d * 0.92 + d * 0.5;
     var offset = (r % 2) * d * 0.5;
     var band = hues[Math.floor(rand() * hues.length)];
-    var alpha = 0.18 + rand() * 0.26;
+    var alpha = 0.26 + rand() * 0.28;
 
     // The thread the beads sit on.
     ctx.strokeStyle = pal.ink;
@@ -162,6 +162,25 @@ function paint(canvas) {
   } else {
     drawStitch(ctx, rect.width, rect.height, rand, pal);
   }
+
+  light(ctx, rect.width, rect.height);
+}
+
+// Soft light falling from the top left, and a little shade at the edges.
+// Fixed black and white rather than palette colours, so it works on either theme.
+function light(ctx, w, h) {
+  var glow = ctx.createLinearGradient(0, 0, w * 0.9, h);
+  glow.addColorStop(0, 'rgba(255,255,255,0.13)');
+  glow.addColorStop(0.5, 'rgba(255,255,255,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  var r = Math.max(w, h) * 0.78;
+  var vignette = ctx.createRadialGradient(w * 0.42, h * 0.4, r * 0.35, w * 0.5, h * 0.5, r);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.17)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, w, h);
 }
 
 var canvases = Array.prototype.slice.call(document.querySelectorAll('canvas.texture'));

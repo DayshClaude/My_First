@@ -34,3 +34,39 @@ drop the photo in, set quality to about 75, download.
 
 The filename hint printed on each card disappears the moment a real photo
 covers it.
+
+---
+
+## Want stand-in photos before hers are taken?
+
+Use a free-licence stock site — **not** photos lifted from another maker's shop.
+Product shots on a jewellery site are that business's copyrighted photography,
+and showing their pieces on this site would misrepresent whose work it is.
+
+[Unsplash](https://unsplash.com) and [Pexels](https://www.pexels.com) are both
+free for commercial use with no attribution required. Search, download, rename,
+drop in here:
+
+| Search | Save it as |
+| --- | --- |
+| [beaded bracelet](https://unsplash.com/s/photos/beaded-bracelet) | `damson-seed-bracelet.jpg` |
+| [crochet blanket](https://unsplash.com/s/photos/crochet-blanket) | `harbour-stripe-blanket.jpg` |
+| [pearl necklace](https://unsplash.com/s/photos/pearl-necklace) | `riverstone-strand.jpg` |
+| [crochet hat](https://unsplash.com/s/photos/crochet-hat) | `bramble-bucket-hat.jpg` |
+| [charm bracelet](https://unsplash.com/s/photos/charm-bracelet) | `wren-charm-bracelet.jpg` |
+| [crochet bag](https://unsplash.com/s/photos/crochet-bag) | `cobblestone-tote.jpg` |
+| [beaded earrings](https://unsplash.com/s/photos/beaded-earrings) | `lichen-beaded-hoops.jpg` |
+| [baby blanket](https://unsplash.com/s/photos/baby-blanket) | `tidepool-baby-blanket.jpg` |
+| [anklet](https://unsplash.com/s/photos/anklet) | `brass-chain-anklet.jpg` |
+| [crochet cardigan](https://unsplash.com/s/photos/crochet-cardigan) | `meadow-granny-cardigan.jpg` |
+| [yarn and craft table](https://unsplash.com/s/photos/yarn-craft) | `workspace.jpg` |
+
+Ten minutes of downloading and the whole gallery is populated.
+
+**But treat these as scaffolding, not a catalogue.** They're someone else's
+pieces, so the descriptions in `index.html` won't match what's in the picture,
+and anyone reading the site will assume the photos show her work. Swap in real
+photos of her own pieces before you send the link to anybody.
+
+If that trade doesn't appeal, the generated swatches are the safer stand-in —
+they're abstract, so nobody mistakes them for a product shot.
