@@ -10,6 +10,36 @@ cloud session couldn't see local files and GitHub push access was blocked.
 
 ---
 
+## Pick up here (as of 27 Aug)
+
+The site is finished and working. The only thing outstanding is getting the
+owner's photos into `images/` on their machine.
+
+**What went wrong last session:** their local clone went stale — `git pull`
+silently never landed, so they were opening a days-old `index.html` that
+referenced different filenames and still had the photo bug. Their GitHub
+account (`shaundaysh-blip`) has read-only access to this repo, so they cannot
+push or upload either. Nothing they did wrong; the routes were just blocked.
+
+**The one-step fix — download the current site as a zip, no git involved:**
+
+https://github.com/DayshClaude/My_First/archive/refs/heads/claude/what-do-i-do-5w1e91.zip
+
+Then, in the extracted folder:
+
+1. Copy their five contact sheets (`Bracelets 1-5`, `Crochet 1-2`,
+   `Jewellry 1-2`) and their logo into `images/`.
+2. Open `split-images.html`, drag **all nine sheets in at once** (doing them
+   one at a time restarts the numbering — this is what bit them), check the
+   summary reads 20 bracelets / 19 crochet / 17 jewellery, download the zip
+   and unzip it into `images/`.
+3. Rename the logo to `images/logo.png`.
+4. Open `index.html`.
+
+Work from that fresh folder and discard the old `Islas_Website` one.
+
+---
+
 ## Where things stand
 
 **Done:**
