@@ -100,7 +100,13 @@ site never looks half-finished.
 
 ### Splitting photos of several products at once
 
-Put the original photo in `images/source/` and run:
+**The easy way, nothing to install:** open `split-images.html` in any browser,
+drag the sheets onto it, check the numbered boxes look right, and click
+download. You get `beadwell-images.zip` — unzip it into `images/` and the
+photos appear on the site. It all runs in the browser; nothing is uploaded.
+
+**Or from the command line**, if you have Python and Pillow — put the original
+photo in `images/source/` and run:
 
 ```bash
 python3 tools/split_all.py

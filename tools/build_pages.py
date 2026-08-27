@@ -283,10 +283,12 @@ def header(active=""):
 
 
 def card(stem, name, desc, materials, detail, ref, texture, ratio):
+    alt = esc(name)
     return f"""        <article class="piece">
-          <div class="piece__media {ratio}" style="--img:url('images/{stem}.jpg')">
+          <div class="piece__media {ratio}">
             <canvas class="texture" data-texture="{texture}" data-seed="{stem}"></canvas>
-            <span class="filehint">images/{stem}.jpg</span>
+            <img class="photo" src="images/{stem}.jpg" alt="{alt}" loading="lazy" decoding="async">
+            <span class="filehint">Photo goes here &middot; {stem}.jpg</span>
           </div>
           <div class="piece__body">
             <h3>{esc(name)}</h3>
@@ -435,8 +437,9 @@ def build_index():
     cards = ""
     for href, title, stem, texture, count, blurb in featured:
         cards += f"""        <a class="cat" href="{href}">
-          <div class="piece__media ratio-45" style="--img:url('images/{stem}.jpg')">
+          <div class="piece__media ratio-45">
             <canvas class="texture" data-texture="{texture}" data-seed="cat-{title.lower()}"></canvas>
+            <img class="photo" src="images/{stem}.jpg" alt="" loading="lazy" decoding="async">
           </div>
           <div class="cat__body">
             <p class="eyebrow">{count}</p>
@@ -505,9 +508,10 @@ def build_index():
           note and we'll work it out between us.</p>
       </div>
       <figure class="about__swatch" aria-hidden="true">
-        <div class="piece__media ratio-45" style="--img:url('images/workspace.jpg')">
+        <div class="piece__media ratio-45">
           <canvas class="texture" data-texture="stitch" data-seed="workbench"></canvas>
-          <span class="filehint">images/workspace.jpg</span>
+          <img class="photo" src="images/workspace.jpg" alt="" loading="lazy" decoding="async">
+          <span class="filehint">Photo goes here &middot; workspace.jpg</span>
         </div>
       </figure>
     </div>

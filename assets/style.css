@@ -369,24 +369,29 @@ a:hover { color: var(--accent-dim); }
 
 .piece__media canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* The real photo sits on top of the generated texture.
-   If images/<name>.jpg doesn't exist yet, this layer simply
-   doesn't paint and the woven texture shows through. */
-.piece__media::after {
-  content: "";
+/* The real photo sits on top of the generated texture. It is a real <img>
+   rather than a CSS background so the path resolves against the page — a
+   url() inside a custom property would resolve against the stylesheet
+   instead, which silently breaks every path. app.js hides the image if the
+   file isn't there yet, letting the woven texture show through. */
+.piece__media .photo {
   position: absolute; inset: 0;
-  background-image: var(--img);
-  background-size: cover;
-  background-position: center;
-  transition: transform .5s ease;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Transparent until the file is confirmed present. Not display:none —
+     a lazily-loaded image that isn't displayed never fetches at all. */
+  opacity: 0;
+  transition: opacity .4s ease, transform .5s ease;
 }
-.piece:hover .piece__media::after { transform: scale(1.03); }
+.piece__media .photo.is-there { opacity: 1; }
+.piece:hover .photo, .cat:hover .photo { transform: scale(1.03); }
 
 /* Filename hint — covered up the moment a real photo is added */
 .filehint {
-  position: absolute; left: .625rem; bottom: .625rem; z-index: 1;
+  position: absolute; left: .625rem; bottom: .625rem;
   font-family: var(--font-mono); font-size: .5625rem; letter-spacing: .04em;
-  color: var(--muted);
+  color: var(--ink-soft);
   background: color-mix(in srgb, var(--card) 82%, transparent);
   padding: .2rem .45rem;
   border-radius: var(--radius);

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Split product photos — Beadwell</title>
+<style>
+  :root {
+    --paper:#EEF0EE; --card:#F7F8F6; --ink:#22262A; --ink-soft:#4A5157;
+    --muted:#6B7370; --line:#D2D9D3; --accent:#6E3552; --brass:#A8813F;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font:16px/1.6 "Segoe UI", system-ui, sans-serif;
+    padding:2rem clamp(1rem,5vw,4rem) 5rem;
+  }
+  h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:600; margin:0 0 .4rem; }
+  h2 { font-size:1.1rem; margin:0 0 .3rem; }
+  .sub { color:var(--ink-soft); max-width:60ch; margin:0 0 2rem; }
+  .drop {
+    border:2px dashed var(--line); border-radius:6px; background:var(--card);
+    padding:3rem 1.5rem; text-align:center; cursor:pointer; transition:.15s;
+  }
+  .drop:hover, .drop.over { border-color:var(--accent); background:#fff; }
+  .drop strong { display:block; font-size:1.15rem; margin-bottom:.4rem; }
+  .drop span { color:var(--muted); font-size:.9rem; }
+  .bar { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin:1.5rem 0; }
+  button {
+    font:inherit; font-size:.9rem; padding:.7rem 1.3rem; border-radius:4px;
+    border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer;
+  }
+  button:hover:not(:disabled) { background:#8E5271; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  button.ghost { background:transparent; color:var(--accent); }
+  .sheet {
+    background:var(--card); border:1px solid var(--line); border-radius:6px;
+    padding:1.1rem; margin-bottom:1.1rem;
+  }
+  .sheet header { display:flex; flex-wrap:wrap; gap:.75rem; align-items:baseline; justify-content:space-between; }
+  .name { font-family:var(--mono); font-size:.85rem; word-break:break-all; }
+  .count { font-family:var(--mono); font-size:.8rem; color:var(--brass); white-space:nowrap; }
+  .warn { color:#9A4B2F; font-size:.85rem; margin-top:.5rem; }
+  canvas.map { width:100%; height:auto; display:block; margin-top:.9rem; border:1px solid var(--line); border-radius:3px; background:#fff; }
+  .ctrls { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; margin-top:.8rem; font-size:.85rem; }
+  .ctrls label { display:flex; gap:.4rem; align-items:center; color:var(--ink-soft); }
+  input[type=text] { font:inherit; font-size:.85rem; padding:.35rem .5rem; border:1px solid var(--line); border-radius:3px; width:7rem; }
+  input[type=number] { font:inherit; font-size:.85rem; padding:.35rem .5rem; border:1px solid var(--line); border-radius:3px; width:4rem; }
+  #log { font-family:var(--mono); font-size:.8rem; color:var(--ink-soft); white-space:pre-wrap; margin-top:1rem; }
+  .done { background:#EAF0EA; border-left:3px solid var(--brass); padding:1rem 1.2rem; border-radius:4px; margin-top:1.5rem; }
+  .done ol { margin:.6rem 0 0; padding-left:1.2rem; }
+  .done li { margin:.3rem 0; }
+  code { font-family:var(--mono); font-size:.85em; background:#E4E8E5; padding:.1rem .35rem; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<h1>Split product photos</h1>
+<p class="sub">Drop the contact sheets in below. Each product gets cut out, centred on white
+at the shape the website's cards use, and shrunk to a sensible size for the web. Everything
+happens in this browser — nothing is uploaded anywhere.</p>
+
+<div class="drop" id="drop">
+  <strong>Drop your photo sheets here</strong>
+  <span>or click to choose them — <code>Bracelets 1.png</code>, <code>Crochet 2.png</code> and so on</span>
+  <input type="file" id="file" accept="image/*" multiple hidden>
+</div>
+
+<div class="bar" id="bar" hidden>
+  <button id="go">Download all the cut-out images</button>
+  <button class="ghost" id="reset">Start over</button>
+  <label style="font-size:.85rem;color:var(--muted)">
+    Sensitivity
+    <input type="range" id="tol" min="4" max="40" value="14">
+  </label>
+</div>
+
+<div id="sheets"></div>
+<div id="log"></div>
+
+<script>
+/* ────────────────────────────────────────────────────────────
+   Finding the products: they sit on white with gaps between,
+   so we look for the empty rows and columns rather than doing
+   anything clever. Same approach as tools/split_sheets.py.
+   ──────────────────────────────────────────────────────────── */
+
+var MIN_BAND = 0.04;   // ignore specks smaller than this share of the sheet
+var PADDING  = 0.08;   // breathing room left around each product
+var RATIO    = 4 / 5;  // the shape of the website's cards
+var MAX_W    = 1200;
+var BUDGET   = 300 * 1024;
+
+var sheets = [];
+var tolerance = 14;
+
+function bands(flags, minimum) {
+  var out = [], start = null;
+  for (var i = 0; i < flags.length; i++) {
+    if (flags[i] && start === null) start = i;
+    else if (!flags[i] && start !== null) {
+      if (i - start >= minimum) out.push([start, i]);
+      start = null;
+    }
+  }
+  if (start !== null && flags.length - start >= minimum) out.push([start, flags.length]);
+  return out;
+}
+
+function detect(img) {
+  var c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  var ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  var w = c.width, h = c.height;
+  var data = ctx.getImageData(0, 0, w, h).data;
+  var limit = 255 - tolerance;
+
+  // A pixel is "content" if any channel is darker than the limit,
+  // or if it is transparent-free coloured rather than paper white.
+  function filled(x, y) {
+    var i = (y * w + x) * 4;
+    if (data[i + 3] < 40) return false;              // transparent counts as empty
+    return data[i] < limit || data[i+1] < limit || data[i+2] < limit;
+  }
+
+  var rowFlags = [];
+  for (var y = 0; y < h; y++) {
+    var any = false;
+    for (var x = 0; x < w; x += 3) { if (filled(x, y)) { any = true; break; } }
+    rowFlags.push(any);
+  }
+
+  var boxes = [];
+  bands(rowFlags, Math.floor(h * MIN_BAND)).forEach(function (band) {
+    var top = band[0], bottom = band[1];
+    var colFlags = [];
+    for (var x = 0; x < w; x++) {
+      var any = false;
+      for (var y = top; y < bottom; y += 3) { if (filled(x, y)) { any = true; break; } }
+      colFlags.push(any);
+    }
+    bands(colFlags, Math.floor(w * MIN_BAND)).forEach(function (cb) {
+      boxes.push({ l: cb[0], t: top, r: cb[1], b: bottom });
+    });
+  });
+  return boxes;
+}
+
+/* ── Naming: work out the category and sheet order from the filename ── */
+
+function categoryOf(name) {
+  var n = name.toLowerCase();
+  if (n.indexOf('bracelet') > -1) return 'bracelet';
+  if (n.indexOf('crochet') > -1) return 'crochet';
+  if (n.indexOf('jewel') > -1) return 'jewellery';
+  return 'piece';
+}
+function numberOf(name) {
+  var m = name.match(/(\d+)/g);
+  return m ? parseInt(m[m.length - 1], 10) : 0;
+}
+
+/* ── Turning a box into a finished, web-sized image ── */
+
+function renderCrop(img, box) {
+  var padX = Math.round((box.r - box.l) * PADDING);
+  var padY = Math.round((box.b - box.t) * PADDING);
+  var l = Math.max(0, box.l - padX), t = Math.max(0, box.t - padY);
+  var r = Math.min(img.naturalWidth, box.r + padX), b = Math.min(img.naturalHeight, box.b + padY);
+  var cw = r - l, ch = b - t;
+
+  // Centre it on a white canvas of the card's shape, never stretching.
+  var boxW = cw, boxH = ch;
+  if (cw / ch > RATIO) boxH = Math.round(cw / RATIO); else boxW = Math.round(ch * RATIO);
+
+  var scale = Math.min(1, MAX_W / boxW);
+  var outW = Math.round(boxW * scale), outH = Math.round(boxH * scale);
+
+  var c = document.createElement('canvas');
+  c.width = outW; c.height = outH;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, outW, outH);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, l, t, cw, ch,
+    Math.round((boxW - cw) / 2 * scale), Math.round((boxH - ch) / 2 * scale),
+    Math.round(cw * scale), Math.round(ch * scale));
+  return { canvas: c, sourceWidth: cw };
+}
+
+function toJpeg(canvas) {
+  // Step the quality down until the file is a reasonable size.
+  var qualities = [0.86, 0.8, 0.74, 0.68, 0.62];
+  return new Promise(function (resolve) {
+    (function attempt(i) {
+      canvas.toBlob(function (blob) {
+        if (blob.size <= BUDGET || i === qualities.length - 1) resolve(blob);
+        else attempt(i + 1);
+      }, 'image/jpeg', qualities[i]);
+    })(0);
+  });
+}
+
+/* ── A minimal ZIP writer (stored, no compression — JPEGs are
+      already compressed, so there is nothing to gain). ── */
+
+var CRC_TABLE = (function () {
+  var table = new Uint32Array(256);
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function makeZip(files) {
+  var chunks = [], central = [], offset = 0;
+  var encoder = new TextEncoder();
+
+  function u32(v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+  function u16(v) { return [v & 255, (v >>> 8) & 255]; }
+
+  files.forEach(function (f) {
+    var nameBytes = encoder.encode(f.name);
+    var crc = crc32(f.bytes);
+    var local = [].concat([80,75,3,4], u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(f.bytes.length), u32(f.bytes.length), u16(nameBytes.length), u16(0));
+    chunks.push(new Uint8Array(local), nameBytes, f.bytes);
+
+    central.push([].concat([80,75,1,2], u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(f.bytes.length), u32(f.bytes.length), u16(nameBytes.length),
+      u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset)));
+    central.push(nameBytes);
+    offset += local.length + nameBytes.length + f.bytes.length;
+  });
+
+  var centralStart = offset, centralSize = 0;
+  var centralChunks = [];
+  central.forEach(function (part) {
+    var bytes = part instanceof Uint8Array ? part : new Uint8Array(part);
+    centralChunks.push(bytes); centralSize += bytes.length;
+  });
+
+  var end = [].concat([80,75,5,6], u16(0), u16(0), u16(files.length), u16(files.length),
+    u32(centralSize), u32(centralStart), u16(0));
+
+  return new Blob(chunks.concat(centralChunks, [new Uint8Array(end)]), { type: 'application/zip' });
+}
+
+/* ── Interface ── */
+
+var dropEl = document.getElementById('drop');
+var fileEl = document.getElementById('file');
+var sheetsEl = document.getElementById('sheets');
+var barEl = document.getElementById('bar');
+var logEl = document.getElementById('log');
+
+dropEl.addEventListener('click', function () { fileEl.click(); });
+dropEl.addEventListener('dragover', function (e) { e.preventDefault(); dropEl.classList.add('over'); });
+dropEl.addEventListener('dragleave', function () { dropEl.classList.remove('over'); });
+dropEl.addEventListener('drop', function (e) {
+  e.preventDefault(); dropEl.classList.remove('over');
+  handle(e.dataTransfer.files);
+});
+fileEl.addEventListener('change', function () { handle(fileEl.files); });
+document.getElementById('reset').addEventListener('click', function () { location.reload(); });
+document.getElementById('tol').addEventListener('change', function (e) {
+  tolerance = parseInt(e.target.value, 10);
+  redetectAll();
+});
+
+function handle(fileList) {
+  var files = Array.prototype.slice.call(fileList).filter(function (f) { return f.type.indexOf('image') === 0; });
+  if (!files.length) return;
+
+  var pending = files.length;
+  files.forEach(function (file) {
+    var img = new Image();
+    img.onload = function () {
+      sheets.push({ file: file, img: img, name: file.name, boxes: [], forceGrid: '' });
+      if (--pending === 0) finishLoad();
+    };
+    img.onerror = function () { if (--pending === 0) finishLoad(); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function finishLoad() {
+  // Order sheets the way the website expects: by category, then sheet number.
+  var order = { bracelet: 0, crochet: 1, jewellery: 2, piece: 3 };
+  sheets.sort(function (a, b) {
+    var ca = order[categoryOf(a.name)], cb = order[categoryOf(b.name)];
+    return ca !== cb ? ca - cb : numberOf(a.name) - numberOf(b.name);
+  });
+  dropEl.hidden = true;
+  barEl.hidden = false;
+  redetectAll();
+}
+
+function gridBoxes(img, rows, cols) {
+  var out = [];
+  for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+    out.push({
+      l: Math.round(c * img.naturalWidth / cols), t: Math.round(r * img.naturalHeight / rows),
+      r: Math.round((c + 1) * img.naturalWidth / cols), b: Math.round((r + 1) * img.naturalHeight / rows)
+    });
+  }
+  return out;
+}
+
+function redetectAll() {
+  sheets.forEach(function (s) {
+    var m = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(s.forceGrid.trim());
+    s.boxes = m ? gridBoxes(s.img, parseInt(m[1], 10), parseInt(m[2], 10)) : detect(s.img);
+  });
+  draw();
+}
+
+function draw() {
+  sheetsEl.innerHTML = '';
+  var counters = {};
+
+  sheets.forEach(function (s, index) {
+    var cat = categoryOf(s.name);
+    counters[cat] = counters[cat] || 1;
+    s.startNumber = counters[cat];
+    counters[cat] += s.boxes.length;
+
+    var el = document.createElement('div');
+    el.className = 'sheet';
+
+    var last = s.startNumber + s.boxes.length - 1;
+    var small = s.boxes.filter(function (b) { return (b.r - b.l) < 500; }).length;
+
+    el.innerHTML =
+      '<header><h2 class="name">' + s.name + '</h2>' +
+      '<span class="count">' + s.boxes.length + ' found &rarr; ' + cat + '-' +
+      String(s.startNumber).padStart(2, '0') + ' to ' + cat + '-' + String(last).padStart(2, '0') + '</span></header>' +
+      (small ? '<p class="warn">' + small + ' of these are under 500px wide, so they will look a little soft on the page.</p>' : '') +
+      (s.boxes.length === 0 ? '<p class="warn">Nothing found. Try the sensitivity slider, or type a grid below (rows x columns).</p>' : '');
+
+    var map = document.createElement('canvas');
+    map.className = 'map';
+    var scale = Math.min(1, 900 / s.img.naturalWidth);
+    map.width = Math.round(s.img.naturalWidth * scale);
+    map.height = Math.round(s.img.naturalHeight * scale);
+    var ctx = map.getContext('2d');
+    ctx.drawImage(s.img, 0, 0, map.width, map.height);
+    ctx.strokeStyle = '#6E3552'; ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(110,53,82,.85)';
+    ctx.font = '600 13px system-ui';
+    s.boxes.forEach(function (b, i) {
+      var x = b.l * scale, y = b.t * scale, w = (b.r - b.l) * scale, h = (b.b - b.t) * scale;
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillRect(x, y, 26, 18);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(String(s.startNumber + i), x + 6, y + 13);
+      ctx.fillStyle = 'rgba(110,53,82,.85)';
+    });
+    el.appendChild(map);
+
+    var ctrls = document.createElement('div');
+    ctrls.className = 'ctrls';
+    ctrls.innerHTML = '<label>If the boxes look wrong, force a grid: ' +
+      '<input type="text" placeholder="2x5" value="' + s.forceGrid + '" data-i="' + index + '"></label>' +
+      '<span style="color:var(--muted)">rows &times; columns</span>';
+    ctrls.querySelector('input').addEventListener('change', function (e) {
+      sheets[parseInt(e.target.dataset.i, 10)].forceGrid = e.target.value;
+      redetectAll();
+    });
+    el.appendChild(ctrls);
+    sheetsEl.appendChild(el);
+  });
+
+  var total = sheets.reduce(function (n, s) { return n + s.boxes.length; }, 0);
+  logEl.textContent = total + ' images will be produced from ' + sheets.length + ' sheet(s).';
+}
+
+document.getElementById('go').addEventListener('click', async function () {
+  var button = this;
+  button.disabled = true;
+  var files = [];
+
+  for (var s of sheets) {
+    for (var i = 0; i < s.boxes.length; i++) {
+      var cat = categoryOf(s.name);
+      var name = cat + '-' + String(s.startNumber + i).padStart(2, '0') + '.jpg';
+      logEl.textContent = 'Making ' + name + '…';
+      var out = renderCrop(s.img, s.boxes[i]);
+      var blob = await toJpeg(out.canvas);
+      files.push({ name: name, bytes: new Uint8Array(await blob.arrayBuffer()) });
+    }
+  }
+
+  var zip = makeZip(files);
+  var url = URL.createObjectURL(zip);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'beadwell-images.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+
+  logEl.innerHTML = '';
+  var done = document.createElement('div');
+  done.className = 'done';
+  done.innerHTML = '<strong>' + files.length + ' images saved to beadwell-images.zip</strong>' +
+    '<ol><li>Open the zip in your Downloads folder.</li>' +
+    '<li>Copy everything inside it into the website\'s <code>images</code> folder.</li>' +
+    '<li>Open <code>index.html</code> — the photos will be there.</li></ol>';
+  document.body.appendChild(done);
+  button.disabled = false;
+});
+</script>
+</body>
+</html>

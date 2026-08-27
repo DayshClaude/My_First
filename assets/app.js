@@ -262,7 +262,31 @@ if (document.documentElement.hasAttribute('data-preview')) {
   });
 }
 
-/* ── 3. Logo ───────────────────────────────────────────────
+/* ── 3. Photos ─────────────────────────────────────────────
+   Each card carries both a generated texture and a real photo.
+   Until the photo file exists the image fails to load, so we
+   hide it and leave the texture showing. Once it is there, the
+   photo covers the texture and the filename hint comes off.
+   ------------------------------------------------------- */
+
+function settlePhoto(img) {
+  if (!img.naturalWidth) return;          // no file there yet — texture stays
+  img.classList.add('is-there');
+  var media = img.closest('.piece__media');
+  var hint = media && media.querySelector('.filehint');
+  if (hint) hint.hidden = true;
+}
+
+document.querySelectorAll('.piece__media .photo').forEach(function (img) {
+  if (img.complete) {
+    settlePhoto(img);
+  } else {
+    img.addEventListener('load', function () { settlePhoto(img); });
+    img.addEventListener('error', function () { settlePhoto(img); });
+  }
+});
+
+/* ── 4. Logo ───────────────────────────────────────────────
    The text wordmark shows by default, so there's never a broken
    image. If a logo file loads, it takes the text's place.
    images/logo-dark.* is used on dark backgrounds when present.
@@ -304,7 +328,7 @@ function applyLogo() {
 applyLogo();
 if (darkQuery.addEventListener) darkQuery.addEventListener('change', applyLogo);
 
-/* ── 4. Reveals + the year in the footer ───────────────── */
+/* ── 5. Reveals + the year in the footer ───────────────── */
 
 var yearEl = document.getElementById('year');
 if (yearEl) yearEl.textContent = String(new Date().getFullYear());

@@ -34,16 +34,16 @@ cloud session couldn't see local files and GitHub push access was blocked.
 **Not done — the next jobs:**
 
 1. **Split the contact sheets.** The originals are in the owner's
-   `images/` folder (named `Bracelets 1.png` … `Jewellry 2.png`). Move them
-   into `images/source/`, then run:
+   `images/` folder (named `Bracelets 1.png` … `Jewellry 2.png`).
 
-   ```bash
-   python3 tools/split_all.py
-   ```
+   Easiest route, nothing to install: open **`split-images.html`** in a browser,
+   drag the sheets in, check the numbered boxes look right, click download.
+   It produces `beadwell-images.zip`; unzip it into `images/`.
 
-   It finds sheets by loose filename match — spaces, capitals, `.png` and the
-   "Jewellry" spelling all work — and skips `Bracelets 5`, which duplicates
-   `Bracelets 4`. Needs Pillow: `pip install Pillow`.
+   Or, if Python and Pillow are available, move the sheets into
+   `images/source/` and run `python3 tools/split_all.py` — same algorithm,
+   same output names, and it skips `Bracelets 5` which duplicates
+   `Bracelets 4`.
 
    **Then look at every crop.** Detection splits on white gutters between
    products; the bottom rows of the crochet sheets have tiles that butt close
