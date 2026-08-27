@@ -18,7 +18,24 @@
   }
   h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:600; margin:0 0 .4rem; }
   h2 { font-size:1.1rem; margin:0 0 .3rem; }
-  .sub { color:var(--ink-soft); max-width:60ch; margin:0 0 2rem; }
+  .sub { color:var(--ink-soft); max-width:60ch; margin:0 0 1rem; }
+  .important {
+    max-width:60ch; margin:0 0 2rem; padding:.9rem 1.1rem;
+    background:#F3ECEF; border-left:3px solid var(--accent); border-radius:4px;
+    font-size:.92rem;
+  }
+  .summary {
+    background:#EAF0EA; border-left:3px solid var(--brass); border-radius:4px;
+    padding:1rem 1.2rem; margin:1.2rem 0;
+  }
+  .summary table { border-collapse:collapse; margin-top:.5rem; font-size:.88rem; }
+  .summary td { padding:.15rem .9rem .15rem 0; }
+  .summary td:first-child { font-family:var(--mono); }
+  .dupe { opacity:.55; }
+  .dupe-tag {
+    display:inline-block; background:#9A4B2F; color:#fff; font-size:.7rem;
+    padding:.1rem .45rem; border-radius:3px; margin-left:.5rem; vertical-align:middle;
+  }
   .drop {
     border:2px dashed var(--line); border-radius:6px; background:var(--card);
     padding:3rem 1.5rem; text-align:center; cursor:pointer; transition:.15s;
@@ -57,9 +74,14 @@
 <body>
 
 <h1>Split product photos</h1>
-<p class="sub">Drop the contact sheets in below. Each product gets cut out, centred on white
-at the shape the website's cards use, and shrunk to a sensible size for the web. Everything
-happens in this browser — nothing is uploaded anywhere.</p>
+<p class="sub">Each product gets cut out, centred on white at the shape the website's cards
+use, and shrunk to a sensible size for the web. Everything happens in this browser — nothing
+is uploaded anywhere.</p>
+
+<p class="important"><strong>Drop all your sheets in together, in one go.</strong>
+The numbering runs straight through them — bracelet-01 to bracelet-20 across the four
+bracelet sheets. Doing one sheet at a time restarts at 01 every time and the files
+overwrite each other.</p>
 
 <div class="drop" id="drop">
   <strong>Drop your photo sheets here</strong>
@@ -149,6 +171,21 @@ function detect(img) {
 }
 
 /* ── Naming: work out the category and sheet order from the filename ── */
+
+// A cheap fingerprint: scale the sheet right down and read the pixels.
+// Enough to spot the same sheet added twice under different names.
+function fingerprint(img) {
+  var c = document.createElement('canvas');
+  c.width = 24; c.height = 24;
+  var ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, 24, 24);
+  var d = ctx.getImageData(0, 0, 24, 24).data;
+  var out = [];
+  for (var i = 0; i < d.length; i += 4) {
+    out.push((d[i] >> 4) + ',' + (d[i+1] >> 4) + ',' + (d[i+2] >> 4));
+  }
+  return out.join('|');
+}
 
 function categoryOf(name) {
   var n = name.toLowerCase();
@@ -301,6 +338,16 @@ function finishLoad() {
     var ca = order[categoryOf(a.name)], cb = order[categoryOf(b.name)];
     return ca !== cb ? ca - cb : numberOf(a.name) - numberOf(b.name);
   });
+
+  // Flag a sheet that is the same picture as an earlier one in its category,
+  // so it does not eat numbers the website is expecting.
+  var seen = {};
+  sheets.forEach(function (s) {
+    var cat = categoryOf(s.name);
+    var key = cat + ':' + fingerprint(s.img);
+    s.duplicate = !!seen[key];
+    seen[key] = true;
+  });
   dropEl.hidden = true;
   barEl.hidden = false;
   redetectAll();
@@ -319,6 +366,7 @@ function gridBoxes(img, rows, cols) {
 
 function redetectAll() {
   sheets.forEach(function (s) {
+    if (s.duplicate) { s.boxes = []; return; }
     var m = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(s.forceGrid.trim());
     s.boxes = m ? gridBoxes(s.img, parseInt(m[1], 10), parseInt(m[2], 10)) : detect(s.img);
   });
@@ -336,17 +384,20 @@ function draw() {
     counters[cat] += s.boxes.length;
 
     var el = document.createElement('div');
-    el.className = 'sheet';
+    el.className = 'sheet' + (s.duplicate ? ' dupe' : '');
 
     var last = s.startNumber + s.boxes.length - 1;
     var small = s.boxes.filter(function (b) { return (b.r - b.l) < 500; }).length;
 
     el.innerHTML =
       '<header><h2 class="name">' + s.name + '</h2>' +
-      '<span class="count">' + s.boxes.length + ' found &rarr; ' + cat + '-' +
-      String(s.startNumber).padStart(2, '0') + ' to ' + cat + '-' + String(last).padStart(2, '0') + '</span></header>' +
+      (s.duplicate
+        ? '<span class="count">skipped<span class="dupe-tag">same picture as an earlier sheet</span></span></header>'
+        : '<span class="count">' + s.boxes.length + ' found &rarr; ' + cat + '-' +
+          String(s.startNumber).padStart(2, '0') + ' to ' + cat + '-' +
+          String(last).padStart(2, '0') + '</span></header>') +
       (small ? '<p class="warn">' + small + ' of these are under 500px wide, so they will look a little soft on the page.</p>' : '') +
-      (s.boxes.length === 0 ? '<p class="warn">Nothing found. Try the sensitivity slider, or type a grid below (rows x columns).</p>' : '');
+      (!s.duplicate && s.boxes.length === 0 ? '<p class="warn">Nothing found. Try the sensitivity slider, or type a grid below (rows x columns).</p>' : '');
 
     var map = document.createElement('canvas');
     map.className = 'map';
@@ -381,8 +432,33 @@ function draw() {
     sheetsEl.appendChild(el);
   });
 
+  // A summary of the final numbering, so it can be checked against what the
+  // website is expecting before anything is downloaded.
+  var totals = {};
+  sheets.forEach(function (s) {
+    if (!s.boxes.length) return;
+    var cat = categoryOf(s.name);
+    totals[cat] = (totals[cat] || 0) + s.boxes.length;
+  });
+
+  var expected = { bracelet: 20, crochet: 19, jewellery: 17 };
+  var rows = Object.keys(totals).map(function (cat) {
+    var n = totals[cat];
+    var want = expected[cat];
+    var range = cat + '-01 to ' + cat + '-' + String(n).padStart(2, '0');
+    var note = want === undefined ? ''
+      : n === want ? '<span style="color:#4A7A4A">matches the website</span>'
+      : '<span style="color:#9A4B2F">the website expects ' + want + ' — check the boxes above</span>';
+    return '<tr><td>' + range + '</td><td>' + n + ' images</td><td>' + note + '</td></tr>';
+  }).join('');
+
   var total = sheets.reduce(function (n, s) { return n + s.boxes.length; }, 0);
-  logEl.textContent = total + ' images will be produced from ' + sheets.length + ' sheet(s).';
+  var skipped = sheets.filter(function (s) { return s.duplicate; }).length;
+
+  logEl.innerHTML = '<div class="summary"><strong>' + total + ' images from ' +
+    (sheets.length - skipped) + ' sheet(s)' +
+    (skipped ? ', ' + skipped + ' skipped as duplicates' : '') + '</strong>' +
+    '<table>' + rows + '</table></div>';
 }
 
 document.getElementById('go').addEventListener('click', async function () {
